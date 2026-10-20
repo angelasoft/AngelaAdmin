@@ -1,0 +1,49 @@
+name: Deploy AngelaAdmin
+
+on:
+  push:
+    branches: [master]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-angela-admin
+  cancel-in-progress: false
+
+env:
+  DEPLOY_HOST: 13.209.118.5
+  DEPLOY_USER: ubuntu
+  # AngelaCore 배포의 Caddy 가 이 폴더를 admin.angelasoft.com 으로 서비스한다.
+  DEPLOY_DIR: angela-core/admin-dist
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - run: npm ci
+      - run: npm run build
+
+      - name: Configure SSH
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          SSH_KNOWN_HOSTS: ${{ secrets.SSH_KNOWN_HOSTS }}
+        run: |
+          mkdir -p ~/.ssh
+          printf '%s\n' "$SSH_PRIVATE_KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          printf '%s\n' "$SSH_KNOWN_HOSTS" > ~/.ssh/known_hosts
+
+      - name: Upload
+        run: |
+          SSH="ssh -i $HOME/.ssh/deploy_key"
+          $SSH "$DEPLOY_USER@$DEPLOY_HOST" "mkdir -p ~/$DEPLOY_DIR"
+          rsync -az --delete -e "$SSH" dist/ "$DEPLOY_USER@$DEPLOY_HOST:~/$DEPLOY_DIR/"
+
+      - name: Check
+        run: curl -fsS -o /dev/null https://admin.angelasoft.com/
