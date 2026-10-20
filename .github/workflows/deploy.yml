@@ -23,7 +23,6 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          # 로컬과 같은 npm 11 을 써야 package-lock.json 해석이 일치한다 (npm 10 은 npm ci 실패)
           node-version: '24'
           cache: npm
 
