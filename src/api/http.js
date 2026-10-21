@@ -17,7 +17,15 @@ http.interceptors.request.use((config) => {
 
 http.interceptors.response.use(
   (res) => res,
-  (err) => Promise.reject(err),
+  (err) => {
+    // 토큰 만료 등으로 인증이 풀리면 세션을 지우고 로그인 화면으로 보낸다.
+    if (err.response?.status === 401 && err.config?.url !== '/auth/login') {
+      localStorage.removeItem(TOKEN_KEY)
+      localStorage.removeItem('angelaadmin_display_name')
+      window.location.assign('/login')
+    }
+    return Promise.reject(err)
+  },
 )
 
 export default http

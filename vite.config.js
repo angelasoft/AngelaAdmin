@@ -17,6 +17,8 @@ export default defineConfig({
       '/api': {
         target: 'http://localhost:8080',
         changeOrigin: true,
+        // 운영(Caddy)과 같이 /api 접두사를 떼고 AngelaCore 로 전달
+        rewrite: (path) => path.replace(/^\/api/, ''),
       },
     },
   },

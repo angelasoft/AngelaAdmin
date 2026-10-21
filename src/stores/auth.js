@@ -24,15 +24,9 @@ export const useAuthStore = defineStore('auth', () => {
   }
 
   async function login({ username, password }) {
-    try {
-      const { data } = await http.post('/auth/login', { username, password })
-      token.value = data?.token || ''
-      displayName.value = data?.displayName || username
-    } catch {
-      await new Promise((r) => setTimeout(r, 280))
-      token.value = `mock-${Date.now()}`
-      displayName.value = username || '관리자'
-    }
+    const { data } = await http.post('/auth/login', { username, password })
+    token.value = data?.token || ''
+    displayName.value = data?.displayName || username
     persistSession()
   }
 

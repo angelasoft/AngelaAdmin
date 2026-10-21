@@ -1,6 +1,7 @@
 <script setup>
 import { reactive, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { ElMessage } from 'element-plus'
 import { useAuthStore } from '@/stores/auth'
 
 const router = useRouter()
@@ -14,12 +15,20 @@ const form = reactive({
 
 const loading = ref(false)
 
+function loginErrorMessage(status) {
+  if (status === 401) return '아이디 또는 비밀번호가 올바르지 않습니다.'
+  if (status === 429) return '로그인 시도가 너무 많습니다. 15분 후 다시 시도해 주세요.'
+  return '로그인 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.'
+}
+
 async function onSubmit() {
   loading.value = true
   try {
     await auth.login({ username: form.username, password: form.password })
     const redirect = route.query.redirect || '/dashboard'
     await router.replace(String(redirect))
+  } catch (err) {
+    ElMessage.error(loginErrorMessage(err?.response?.status))
   } finally {
     loading.value = false
   }
